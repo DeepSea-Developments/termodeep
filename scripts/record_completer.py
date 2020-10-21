@@ -1,15 +1,19 @@
+import sys
+import os
+sys.path.append(os.path.abspath("/opt/termodeep/scripts/"))
+
 import sqlite3
-import threading
 from datetime import datetime, timedelta
 from io import BytesIO
 
-from scripts.cloud_synchronizer import upload_record_by_id
-from scripts.helpers import get_args
-from scripts.camera_thermal import CameraThermal
-from scripts.database import DATABASE
+from cloud_synchronizer import upload_record_by_id
+from helpers import get_args, load_config
+from camera_thermal import CameraThermal
+from database import DATABASE
+import camera_rgb
 
 
-class RecordCompleter:
+class RecordCompleter():
     thread = None
     record_id = None
     db = None
@@ -22,25 +26,20 @@ class RecordCompleter:
     ALERT_WARNING = 1
     ALERT_DANGER = 2
 
-    JPEG_QUALITY = 85
+    args = None
 
-    def __init__(self, record_id, rgb_camera, delay=2000):
-        # print('init record_completer')
+    def __init__(self, record_id, delay=2000):
+        print('Init record_completer ...')
+
+        #Use a config file
+        conf = load_config()
+        self.args = get_args()
         self.record_id = record_id
-        self.DELAY = delay
-        self.rgb_camera = rgb_camera
+        self.DELAY = float(conf.get('CAPTURE_DELAY'))
+        self.ALERT_WARNING_TEMP = float(conf.get('ALERT_WARNING_TEMP'))
+        self.ALERT_DANGER_TEMP = float(conf.get('ALERT_DANGER_TEMP'))
 
-        args = get_args()
-        if args.warning_temp is not None:
-            self.ALERT_WARNING_TEMP = args.warning_temp
-        if args.danger_temp is not None:
-            self.ALERT_DANGER_TEMP = args.danger_temp
-        if args.capture_wait_time is not None:
-            self.DELAY = args.capture_wait_time
-
-        #RecordCompleter.thread = threading.Thread(target=self._thread)
-        #RecordCompleter.thread.start()
-        self._thread()
+        self.complete_record()
 
     def calculate_alert(self, temperature_body):
         alert = self.ALERT_SAFE
@@ -50,10 +49,7 @@ class RecordCompleter:
             alert = self.ALERT_WARNING
         return alert
 
-    def _thread(self):
-    
-    # Take picture
-
+    def complete_record(self):
         camera = CameraThermal()
 
         end_time = datetime.now() + timedelta(milliseconds=self.DELAY)
@@ -65,10 +61,16 @@ class RecordCompleter:
                 # Restart timer
                 end_time = datetime.now() + timedelta(milliseconds=self.DELAY)
             elif datetime.now() > end_time:
+
                 # Take picture
-                image_stream = BytesIO()
-                self.rgb_camera.capture(image_stream, format='jpeg', quality=self.JPEG_QUALITY)
-                image_rgb = image_stream.getvalue()
+                if self.args.simulator:
+                    placeholder_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tests/placeholder.jpg')
+                    with open(placeholder_path, 'rb') as fh:
+                        buf = BytesIO(fh.read())
+                    image_rgb = buf.getvalue()
+                else:
+                    print("Take Picture!!--------")
+                    image_rgb = camera_rgb.capture()
 
                 db = sqlite3.connect(DATABASE)
                 cur = db.cursor()
@@ -91,8 +93,6 @@ class RecordCompleter:
                      self.calculate_alert(temperatures.get('temperature_body')), self.record_id))
                 db.commit()
 
-                args = get_args()
-                if args.cloud:
+                if self.args.cloud:
                     upload_record_by_id(self.record_id)
-                # print('Stored')
                 break

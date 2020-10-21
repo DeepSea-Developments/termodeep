@@ -22,16 +22,16 @@ from PIL import Image
 START_FRAME_1BP = [0x7E, 0x01, 0x07, 0x00, 0x00, 0x00]
 START_FRAME_2BP = [0x7E, 0x01, 0x07, 0x01, 0x00, 0x00]
 START_FRAME_2BR = [0x7E, 0x01, 0x07, 0x02, 0x00, 0x00]
-READ_GAIN =       [0x7E, 0x01, 0x05, 0x00, 0x00, 0x00]
-SET_GAIN =        [0x7E, 0x01, 0x05, 0x01, 0x00, 0x00]
-READ_OFFSET =     [0x7E, 0x01, 0x06, 0x00, 0x00, 0x00]
-SET_OFFSET =      [0x7E, 0x01, 0x06, 0x01, 0x00, 0x00]
-READ_VERSION =    [0x7E, 0x01, 0x0A, 0x00, 0x00, 0x00]
-CAMERA_OPC_CMD =  [0x7E, 0x01, 0x01, 0x00, 0x00, 0x00]
-STOP_FRAME =      [0x7E, 0x01, 0x08, 0x00, 0x00, 0x00]
-RESPONSE_FRAME =  [0x7E, 0x02, 0x07, 0x00, 0x00, 0x00]
-READ_VTEMP =      [0x7E, 0x01, 0xEE, 0x00, 0x00, 0x00]
-SOFTWARE_RESET =  [0x7E, 0x01, 0xF5, 0x00, 0x00, 0x00]
+READ_GAIN = [0x7E, 0x01, 0x05, 0x00, 0x00, 0x00]
+SET_GAIN = [0x7E, 0x01, 0x05, 0x01, 0x00, 0x00]
+READ_OFFSET = [0x7E, 0x01, 0x06, 0x00, 0x00, 0x00]
+SET_OFFSET = [0x7E, 0x01, 0x06, 0x01, 0x00, 0x00]
+READ_VERSION = [0x7E, 0x01, 0x0A, 0x00, 0x00, 0x00]
+CAMERA_OPC_CMD = [0x7E, 0x01, 0x01, 0x00, 0x00, 0x00]
+STOP_FRAME = [0x7E, 0x01, 0x08, 0x00, 0x00, 0x00]
+RESPONSE_FRAME = [0x7E, 0x02, 0x07, 0x00, 0x00, 0x00]
+READ_VTEMP = [0x7E, 0x01, 0xEE, 0x00, 0x00, 0x00]
+SOFTWARE_RESET = [0x7E, 0x01, 0xF5, 0x00, 0x00, 0x00]
 
 
 # There will be 3 verbose levels
@@ -108,11 +108,11 @@ class M80:
 
     def _spi_read(self, bytes):
         return self.spi.readbytes(bytes)
-        
+
     def _spi_write(self, w_data):
         self.spi.writebytes(w_data)
 
-    #def _spi_readwrite(self, rw_data):
+    # def _spi_readwrite(self, rw_data):
     #    a = rw_data
     #    return self.spi.xfer(a) #DO NOT USE XFER! NEVER! EVER!! NEVER EVER!!
 
@@ -144,7 +144,7 @@ class M80:
         start_tick = datetime.now()
         while (not (self._read_int_pin()) and ((datetime.now() - start_tick).seconds) < timeout_s):
             time.sleep(0.05)
-            #print('.', end='')
+            # print('.', end='')
         if not self._read_int_pin():
             self._print_debug("Wait int timeout")
 
@@ -222,7 +222,7 @@ class M80:
         self._spi_write(STOP_FRAME)
         time.sleep(1)
         self._wait_int()
-        
+
         self.video_status = VideoStatus.IDLE
 
     def start_video_OBP(self):
@@ -238,7 +238,7 @@ class M80:
         self.start_video(VideoMode.TBR)
 
     def start_video(self, video_mode):
-        
+
         self._print_debug("----------Start Video---------")
 
         # If video is runnung and the same video mode is requested, just ignore the command
@@ -284,7 +284,7 @@ class M80:
         else:
             self._print_debug("start_video -M80 streaming error. Response:")
             self._print_hex(read_buff)
-            #raise Exception("start_2BP_frame -M80 streaming error")
+            # raise Exception("start_2BP_frame -M80 streaming error")
 
     def get_frame(self):
         self._print_debug("----------Get Frame---------")
@@ -332,7 +332,7 @@ class M80:
         return FrameMatrix
 
     def take_snapshot(self, file='img.png'):
-    
+
         self._print_debug("----------Take Snapshot---------")
 
         # First review current status of the camera
@@ -358,4 +358,3 @@ class M80:
         time.sleep(1)
         self.reset_pin.on()
         time.sleep(1)
-        

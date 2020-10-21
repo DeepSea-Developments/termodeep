@@ -9,10 +9,6 @@ class OpenCVProcessor:
     REF_TEMP = 33.2
     CAM_SENSITIVITY = 26
 
-    # NOVA 35.3 25.675
-    # JESUS 34.5 19.4
-    # RECEPCION 34.6 9110
-
     THRESHOLD_HUMAN_TEMP = 32
 
     TEMP_FLOOR = 22
@@ -55,7 +51,6 @@ class OpenCVProcessor:
         return cnt_scaled
 
     def process_frame(self, frame_raw):
-
         frame_raw = cv2.flip(frame_raw, 1)
         normalized = frame_raw / self.CAM_SENSITIVITY
         # mean_t_ref = np.median(normalized[80 - self.REF_MEASURE_HEIGHT:80, 0:80])
@@ -79,18 +74,16 @@ class OpenCVProcessor:
         img = img_norm.copy()
         img[80 - self.REF_HEIGHT:, :] = 0
         if self.calibrating:
-            #img[80 - self.REF_HEIGHT:, :] = 0
+            # img[80 - self.REF_HEIGHT:, :] = 0
             img[80 - 1:, :] = 0
-            #img[80 - self.REF_MEASURE_HEIGHT:, :] = 40
+            # img[80 - self.REF_MEASURE_HEIGHT:, :] = 40
 
-
-
-            img[self.y1_ref:self.y2_ref,self.x1_ref:self.x2_ref] = 40
-            #print(y1_ref,y2_ref,x1_ref,x2_ref)
+            img[self.y1_ref:self.y2_ref, self.x1_ref:self.x2_ref] = 40
+            # print(y1_ref,y2_ref,x1_ref,x2_ref)
 
         else:
-            img = img[0:80-self.REF_HEIGHT, :]
-            normalized = normalized[0:80-self.REF_HEIGHT, :]
+            img = img[0:80 - self.REF_HEIGHT, :]
+            normalized = normalized[0:80 - self.REF_HEIGHT, :]
 
         # img_preview = img.copy()
 
@@ -137,7 +130,6 @@ class OpenCVProcessor:
         temperatures = None
 
         if main_contour is not None:
-
             large_contour = self.scale_contour(main_contour, self.OUTPUT_IMAGE_SCALE)
             cv2.drawContours(img_large, [large_contour], -1, (255, 255, 0), thickness=1)
 

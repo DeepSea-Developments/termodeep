@@ -1,0 +1,10 @@
+Flask==1.1.2
+opencv-contrib-python-headless==4.4.0.42
+numpy==1.19.1
+gpiozero==1.5.1
+requests==2.24.0
+pyserial==3.4
+setuptools==49.6.0
+git+https://github.com/pyinstaller/pyinstaller.git
+sentry-sdk==0.16.5
+lzstring==1.0.4

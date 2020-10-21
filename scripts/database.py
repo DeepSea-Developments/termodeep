@@ -1,8 +1,8 @@
 import os
-import sys
-from flask import g
 import sqlite3
+import sys
 
+from flask import g
 
 # DATABASE = 'database.db'
 DATABASE = 'database_v2.db'
@@ -40,7 +40,7 @@ def init_db(app):
         if getattr(sys, 'frozen', False):
             schema_path = os.path.join(sys._MEIPASS, 'schema.sql')
         else:
-            schema_path = 'schema.sql'
+            schema_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'schema.sql')
         with app.open_resource(schema_path, mode='r') as f:
             db.cursor().executescript(f.read())
         db.commit()

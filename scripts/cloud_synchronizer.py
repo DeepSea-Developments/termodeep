@@ -1,11 +1,13 @@
+import sys
+import os
+sys.path.append(os.path.abspath("/opt/termodeep/scripts/"))
+
 import sqlite3
 import threading
 import time
-from base64 import b64encode
-
 import requests
-
-from scripts.database import DATABASE, dictfetchone, dictfetchall
+from base64 import b64encode
+from database import DATABASE, dictfetchone, dictfetchall
 
 
 def get_record(record_id):
@@ -27,15 +29,18 @@ def get_record(record_id):
 
 
 def upload_record(record_data):
-    url = 'https://temodeep-backend.azurewebsites.net/tenant/dsd/api/1.0/cameras/record/'
-    # url = 'http://localhost:8040/tenant/dsd/api/1.0/cameras/record/'
-    r = requests.post(url, record_data)
-    if r.status_code == 201:
-        db = sqlite3.connect(DATABASE)
-        cur = db.cursor()
-        query = """UPDATE records SET uploaded = 1 WHERE record_id = ?"""
-        cur.execute(query, (record_data['record_id'],))
-        db.commit()
+    url = 'https://termodeep-prd-backend.azurewebsites.net/tenant/dsd/api/1.0/cameras/record/create/'
+    # url = 'http://localhost:8040/tenant/dsd/api/1.0/cameras/record/create/'
+    try:
+        r = requests.post(url, record_data)
+        if r.status_code == 201:
+            db = sqlite3.connect(DATABASE)
+            cur = db.cursor()
+            query = """UPDATE records SET uploaded = 1 WHERE record_id = ?"""
+            cur.execute(query, (record_data['record_id'],))
+            db.commit()
+    except Exception as e:
+        print('Could not upload record ' + str(record_data['record_id']))
 
 
 def upload_record_by_id(record_id):
@@ -55,7 +60,7 @@ class CloudSynchronizer:
 
         # Check for pending records
         while True:
-            cur.execute("""SELECT * FROM records WHERE uploaded=0""")
+            cur.execute("""SELECT * FROM records WHERE uploaded=0 AND t_timestamp IS NOT NULL LIMIT 10""")
             data = dictfetchall(cur)
             for record in data:
 
@@ -67,7 +72,7 @@ class CloudSynchronizer:
                 if image_rgb is not None:
                     record['t_image_rgb'] = b64encode(image_rgb).decode("utf-8")
 
-                print('uploading '+str(record['record_id']))
+                print('Uploading record ' + str(record['record_id']))
                 upload_record(record)
 
             time.sleep(30)

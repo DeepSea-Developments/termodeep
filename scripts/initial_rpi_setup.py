@@ -1,8 +1,8 @@
 import re
-import os
 from getmac import get_mac_address
 
 HOSTAPD_FILE = '/etc/hostapd/hostapd.conf'
+
 
 def set_hostapd(ssid, password):
     mac = get_mac_address()
@@ -17,5 +17,6 @@ def set_hostapd(ssid, password):
     with open(HOSTAPD_FILE, 'w') as f:
         f.write(out_file)
         f.close()
+
 
 set_hostapd("TermoDeep", "thermalsmile")

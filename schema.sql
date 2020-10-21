@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS "records"
     [p_last_name] NVARCHAR(160),
     [p_gender] NVARCHAR(1),
     [p_birth_date] TEXT,
-    [p_expiration_date] TEXT,
     [p_blood_type] NVARCHAR(3),
     [p_extra_json] TEXT,
     [p_extra_txt] TEXT,

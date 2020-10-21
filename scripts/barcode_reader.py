@@ -1,24 +1,27 @@
+import sys
+import os
+sys.path.append(os.path.abspath("/opt/termodeep/scripts/"))
+
 import json
 import re
 import threading
 import lzstring
-from datetime import datetime
-
 import requests
 import serial
 from enum import Enum
 from time import sleep
+from datetime import datetime
+from helpers import get_args, get_ports
 
 
 class Person:
-    def __init__(self, identification=None, name=None, last_name=None, gender=None, birth_date=None,
-                 expiration_date=None, blood_type=None, extra_json=None, extra_txt=None, alert=None):
+    def __init__(self, identification=None, name=None, last_name=None, gender=None, birth_date=None, blood_type=None,
+                 extra_json=None, extra_txt=None, alert=None):
         self.identification = identification
         self.name = name
         self.last_name = last_name
         self.gender = gender
         self.birth_date = birth_date
-        self.expiration_date = expiration_date
         self.blood_type = blood_type
         self.extra_json = extra_json
         self.extra_txt = extra_txt
@@ -38,17 +41,29 @@ class BarcodeType(Enum):
 
 
 class BarcodeReader:
+    ports_allowlist = [44953]
+
     KEYS_ARRAY_CR = [0x27, 0x30, 0x04, 0xA0, 0x00, 0x0F, 0x93, 0x12, 0xA0, 0xD1, 0x33, 0xE0, 0x03, 0xD0, 0x00, 0xDf,
                      0x00]
     thread = None
     initiated = False
+    args = None
 
-    def __init__(self, port, baudrate=115200):
-        try:
-            self.serial = serial.Serial(port=port, baudrate=baudrate)
-            self.initiated = True
-        except Exception as e:
-            print(e)
+    def __init__(self, port=None, baudrate=115200):
+        if port is None:
+            ports = get_ports()
+            for (com, desc, vid) in zip(ports[0], ports[1], ports[2]):
+                # print(com, desc, vid)
+                if vid in BarcodeReader.ports_allowlist:
+                    port = com
+
+        if port is not None:
+            try:
+                self.serial = serial.Serial(port=port, baudrate=baudrate, timeout=0.5)
+                self.initiated = True
+            except Exception as e:
+                print(e)
+            self.args = get_args()
 
     def __del__(self):
         self.serial.close()
@@ -70,12 +85,19 @@ class BarcodeReader:
         return string_data
 
     def get_reading(self):
-        msg = []
+        # msg = self.serial.readline()
+        # if msg:
+
         if self.serial.in_waiting > 0:
+            msg = []
             data_size = self.serial.in_waiting
             for i in range(data_size):
                 value = self.serial.read()
                 msg.append(value)
+            # print(msg)
+            # print(len(msg))
+
+            # msg = [msg[i:i + 1] for i in range(0, len(msg), 1)]
 
             # TODO improve code type detection  to allow qr codes of length 531 and 700
             if len(msg) == 531:
@@ -146,7 +168,7 @@ class BarcodeReader:
                         for key in data_dict:
                             if key.startswith('r'):
                                 response_number = key[1:]
-                                alert_key = 'a'+response_number
+                                alert_key = 'a' + response_number
                                 if alert_key in data_dict and data_dict[alert_key] == data_dict[key]:
                                     alert = True
                                     break
@@ -160,17 +182,21 @@ class BarcodeReader:
                         )
                         data = person.__dict__
 
-                    else:
+                    elif self.args.qrexternal:
                         person = Person(
                             extra_txt=decoded_data
                         )
                         data = person.__dict__
 
-                return {
-                    'barcode_type': code_type.value,
-                    'data': data,
-                    'timestamp': datetime.now().isoformat()
-                }
+                if data is not None:
+                    return {
+                        'barcode_type': code_type.value,
+                        'data': data,
+                        'timestamp': datetime.now().isoformat()
+                    }
+                else:
+                    print('External QR not enabled')
+                    return None
             except Exception as e:
                 print(e)
                 return

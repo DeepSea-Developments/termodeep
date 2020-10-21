@@ -55,14 +55,18 @@ def set_new_wifi(ssid, password):
 
 # Get IP of wlan0 interface
 def get_wlan0_ip():
-    ipv4 = re.search(re.compile(r'(?<=inet )(.*)(?=\/)', re.M), os.popen('ip addr show wlan0').read()).groups()[0]
-    return ipv4
+    try:
+        ipv4 = re.search(re.compile(r'(?<=inet )(.*)(?=\/)', re.M), os.popen('ip addr show wlan0').read()).groups()[0]
+        return ipv4
+    except:
+        print('Could not get wlan0 ip')
+        return None
 
 
 # Get hostapd name
 def get_hostapd_name():
     HOSTAPD_FILE = '/etc/hostapd/hostapd.conf'
-    f = open(HOSTAPD_FILE,'r')
+    f = open(HOSTAPD_FILE, 'r')
     data = f.read()
     f.close()
     return re.search(r'\nssid=(.*)', data).group(1)
@@ -70,8 +74,12 @@ def get_hostapd_name():
 
 # Get SSID name
 def get_ssid_name():
-    WPA_SUPPLICANT_FILE = '/etc/wpa_supplicant/wpa_supplicant.conf'
-    f = open(WPA_SUPPLICANT_FILE, 'r')
-    data = f.read()
-    f.close()
-    return re.search(r'ssid="(.*)"', data).group(1)
+    try:
+        WPA_SUPPLICANT_FILE = '/etc/wpa_supplicant/wpa_supplicant.conf'
+        f = open(WPA_SUPPLICANT_FILE, 'r')
+        data = f.read()
+        f.close()
+        return re.search(r'ssid="(.*)"', data).group(1)
+    except:
+        print('Could not get ssid name')
+        return None

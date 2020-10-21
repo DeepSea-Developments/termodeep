@@ -1,5 +1,8 @@
 import time
 import threading
+
+from helpers import stop_camera_thread
+
 try:
     from greenlet import getcurrent as get_ident
 except ImportError:
@@ -13,6 +16,7 @@ class CameraEvent(object):
     """An Event-like class that signals all active clients when a new frame is
     available.
     """
+
     def __init__(self):
         self.events = {}
 
@@ -88,12 +92,20 @@ class BaseCamera(object):
     @classmethod
     def _thread(cls):
         """Camera background thread."""
-        # print('Starting camera thread.')
+        
+        print('Starting camera thread ...')
+
         frames_iterator = cls.frames()
+
         for frame in frames_iterator:
             BaseCamera.frame = frame
             BaseCamera.event.set()  # send signal to clients
             time.sleep(0)
+
+            if stop_camera_thread.is_set():
+                frames_iterator.close()
+                print('Stopping camera thread ...')
+                break
 
             # if there hasn't been any clients asking for frames in
             # the last 10 seconds then stop the thread
@@ -101,4 +113,5 @@ class BaseCamera(object):
             #     frames_iterator.close()
             #     print('Stopping camera thread due to inactivity.')
             #     break
+
         BaseCamera.thread = None
