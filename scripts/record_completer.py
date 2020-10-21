@@ -3,6 +3,7 @@ import threading
 from datetime import datetime, timedelta
 from io import BytesIO
 
+from scripts.cloud_synchronizer import upload_record_by_id
 from scripts.helpers import get_args
 from scripts.camera_thermal import CameraThermal
 from scripts.database import DATABASE
@@ -13,7 +14,7 @@ class RecordCompleter:
     record_id = None
     db = None
 
-    DELAY = 2
+    DELAY = 1
     ALERT_WARNING_TEMP = 37.5
     ALERT_DANGER_TEMP = 38
 
@@ -37,8 +38,9 @@ class RecordCompleter:
         if args.capture_wait_time is not None:
             self.DELAY = args.capture_wait_time
 
-        RecordCompleter.thread = threading.Thread(target=self._thread)
-        RecordCompleter.thread.start()
+        #RecordCompleter.thread = threading.Thread(target=self._thread)
+        #RecordCompleter.thread.start()
+        self._thread()
 
     def calculate_alert(self, temperature_body):
         alert = self.ALERT_SAFE
@@ -88,5 +90,9 @@ class RecordCompleter:
                      temperatures.get('temperature_body'), frame.get('thermal_image'), image_rgb,
                      self.calculate_alert(temperatures.get('temperature_body')), self.record_id))
                 db.commit()
+
+                args = get_args()
+                if args.cloud:
+                    upload_record_by_id(self.record_id)
                 # print('Stored')
                 break

@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS "records"
 (
     [record_id] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     [mac_address] NVARCHAR(17),
+    [uploaded] INTEGER DEFAULT 0,
 
     [p_timestamp] TEXT,
     [p_barcode_type] INTEGER,

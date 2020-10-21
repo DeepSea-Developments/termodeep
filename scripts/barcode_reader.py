@@ -89,15 +89,15 @@ class BarcodeReader:
                 data = None
                 if code_type == BarcodeType.CEDULA_COLOMBIA:
                     person = Person(
-                        identification=self._decode_string_utf_8(msg[48:58]).lstrip('0'),
-                        name=Person.append_names(self._decode_string_utf_8(msg[104:127]),
-                                                 self._decode_string_utf_8(msg[127:150])),
-                        last_name=Person.append_names(self._decode_string_utf_8(msg[58:81]),
-                                                      self._decode_string_utf_8(msg[81:104])),
-                        gender=self._decode_string_utf_8(msg[151:152]),
-                        birth_date=self._decode_string_utf_8(msg[152:156]) + '-' + self._decode_string_utf_8(
-                            msg[156:158]) + '-' + self._decode_string_utf_8(msg[158:160]),
-                        blood_type=self._decode_string_utf_8(msg[166:169])
+                        identification=self._decode_string_iso_8859_1(msg[48:58]).lstrip('0'),
+                        name=Person.append_names(self._decode_string_iso_8859_1(msg[104:127]),
+                                                 self._decode_string_iso_8859_1(msg[127:150])),
+                        last_name=Person.append_names(self._decode_string_iso_8859_1(msg[58:81]),
+                                                      self._decode_string_iso_8859_1(msg[81:104])),
+                        gender=self._decode_string_iso_8859_1(msg[151:152]),
+                        birth_date=self._decode_string_iso_8859_1(msg[152:156]) + '-' + self._decode_string_iso_8859_1(
+                            msg[156:158]) + '-' + self._decode_string_iso_8859_1(msg[158:160]),
+                        blood_type=self._decode_string_iso_8859_1(msg[166:169])
                     )
                     data = person.__dict__
 

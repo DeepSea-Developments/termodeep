@@ -5,7 +5,7 @@ import sqlite3
 
 
 # DATABASE = 'database.db'
-DATABASE = 'database_v1.db'
+DATABASE = 'database_v2.db'
 
 
 def get_db():

@@ -11,11 +11,13 @@ import scripts.hotspot_manager as hpm
 
 from scripts.barcode_reader import BarcodeReader, BarcodeType
 from scripts.camera_thermal import CameraThermal
+from scripts.cloud_synchronizer import CloudSynchronizer
 from scripts.database import get_db, dictfetchone, init_db, dictfetchall
 # from scripts.gui import GUI
 from serial.tools.list_ports import comports
 
 from scripts.helpers import get_mac, disable_logging
+from scripts.helpers import get_mac, disable_logging, get_args
 from scripts.record_completer import RecordCompleter
 from scripts.stream_thermal_camera import StreamThermalCamera
 import picamera
@@ -101,7 +103,7 @@ def latest_record():
     query = """SELECT record_id, p_identification, p_timestamp, p_name, p_last_name, p_gender, p_birth_date,
     p_expiration_date, p_blood_type, t_timestamp, t_temperature_p80, t_temperature_body, t_alert, p_alert
     FROM records WHERE(cast(JULIANDAY('{}') - JULIANDAY(p_timestamp)  as float ) *60 * 60 * 24) < {}
-    ORDER BY record_id DESC LIMIT 1""".format(now, 5)
+    ORDER BY record_id DESC LIMIT 1""".format(now, 15)
     cur.execute(query)
     data = dictfetchone(cur)
     return jsonify(data)
@@ -268,6 +270,12 @@ def start_app():
 
     # Start camera thread
     CameraThermal()
+
+    # Cloud synchronizer
+    args = get_args()
+    if args.cloud:
+        cloud = CloudSynchronizer()
+        cloud.start()
 
     # Barcode scanner
     port_device = []

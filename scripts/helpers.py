@@ -7,6 +7,7 @@ import uuid
 def get_args():
     parser = argparse.ArgumentParser(description='Start Flask Server.')
     parser.add_argument("-c", "--calibrating", help="Set when calibrating", action="store_true")
+    parser.add_argument("-z", "--cloud", help="Upload data to cloud", action="store_true")
     parser.add_argument("-r", "--ref-temp", help="Reference temperature", type=float)
     parser.add_argument("-i", "--ref-height", help="Reference height in pixels", type=int)
 

@@ -92,11 +92,11 @@
               </div>
 
               <div class="form-group">
-                <label class="sub-title">Temperatura estimada del cuerpo:</label>
+                <label class="sub-title" id="lbl_temperature_body">Temperatura estimada del cuerpo:</label>
                 <h3 style="color: #fff;" id="temperature_body"></h3>
               </div>
               <div class="form-group">
-                <label class="sub-title">Temperatura de piel:</label>
+                <label class="sub-title" id="lbl_temperature_skin"></label>
                 <h3 style="color: #fff;" id="temperature_skin"></h3>
               </div>
               <div class="form-group">
@@ -123,7 +123,7 @@
       <section id="registros" class="d-none">
         <div class="border-title">
           <h3 class="title">Registros</h3>
-          <span class="sub-title">TermoDeep v1.1</span>
+          <span class="sub-title">TermoDeep v1.2</span>
         </div>
         <div class="container-fluid">
           <div class="row" style="padding: 50px;">
@@ -397,6 +397,10 @@
 
         $('#temperature_body').text(data.t_temperature_body);
         $('#temperature_skin').text(data.t_temperature_p80);
+        $('#temperature_body').show()
+        $('#temperature_skin').hide()
+        $('#lbl_temperature_skin').hide()
+
         if (data.t_alert == 0) {
           $('#alert_0').show();
           $('#alert_1').hide();
