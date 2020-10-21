@@ -8,3 +8,5 @@ setuptools==49.2.0
 git+https://github.com/pyinstaller/pyinstaller.git
 sentry-sdk==0.16.2
 git+https://github.com/Deepsea-Developments/py-spidev.git
+lzstring==1.0.4
+picamera==1.13

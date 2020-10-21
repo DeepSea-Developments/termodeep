@@ -1,14 +1,15 @@
+import json
 import os
 import sys
 import threading
 from base64 import b64encode
 import sentry_sdk
-
+from datetime import datetime
 from flask import Flask, render_template, Response, request, jsonify, g
 
 import scripts.hotspot_manager as hpm
 
-from scripts.barcode_reader import BarcodeReader
+from scripts.barcode_reader import BarcodeReader, BarcodeType
 from scripts.camera_thermal import CameraThermal
 from scripts.database import get_db, dictfetchone, init_db, dictfetchall
 # from scripts.gui import GUI
@@ -17,13 +18,19 @@ from serial.tools.list_ports import comports
 from scripts.helpers import get_mac, disable_logging
 from scripts.record_completer import RecordCompleter
 from scripts.stream_thermal_camera import StreamThermalCamera
-
+import picamera
 
 sentry_sdk.init("https://7069acf6d8794790a2f5bcc94397b1c1@o425810.ingest.sentry.io/5365893")
 
 MAC_ADDRESS = get_mac()
 disable_logging()
 
+rgb_cam = picamera.PiCamera()
+
+rgb_cam.rotation = 180
+rgb_cam.hflip = True
+# rgb_cam.resolution = (320, 240)
+rgb_cam.resolution = (640, 480)
 
 if getattr(sys, 'frozen', False):
     template_folder = os.path.join(sys._MEIPASS, 'templates')
@@ -67,29 +74,73 @@ def video_feed():
 def barcode_scan():
     content = request.json
     data = content.get('data')
-    # print(content)
+
+    p_extra_json = data.get('extra_json')
+    if p_extra_json is not None:
+        p_extra_json = json.dumps(p_extra_json)
 
     db = get_db()
     cur = db.cursor()
     cur.execute(
         """INSERT INTO records (mac_address, p_barcode_type, p_identification, p_timestamp, p_name, p_last_name, 
-        p_gender, p_birth_date, p_expiration_date, p_blood_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        p_gender, p_birth_date, p_expiration_date, p_blood_type, p_extra_json, p_extra_txt, p_alert) VALUES 
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (MAC_ADDRESS, content.get('barcode_type'), data.get('identification'), content.get('timestamp'),
          data.get('name'), data.get('last_name'), data.get('gender'), data.get('birth_date'),
-         data.get('expiration_date'), data.get('blood_type')))
+         data.get('expiration_date'), data.get('blood_type'), p_extra_json, data.get('extra_txt'), data.get('alert')))
     db.commit()
-    RecordCompleter(cur.lastrowid)
+
+    RecordCompleter(cur.lastrowid, rgb_cam)
     return jsonify(data)
 
 
 @app.route('/latest_record')
 def latest_record():
+    now = datetime.now().isoformat()
     cur = get_db().cursor()
-    cur.execute("""SELECT p_identification, p_timestamp, p_name, p_last_name, p_gender, p_birth_date, p_expiration_date, 
-    p_blood_type, t_timestamp, t_temperature_p80, t_temperature_body, t_alert 
-    FROM records ORDER BY record_id DESC LIMIT 1""")
+    query = """SELECT record_id, p_identification, p_timestamp, p_name, p_last_name, p_gender, p_birth_date,
+    p_expiration_date, p_blood_type, t_timestamp, t_temperature_p80, t_temperature_body, t_alert, p_alert
+    FROM records WHERE(cast(JULIANDAY('{}') - JULIANDAY(p_timestamp)  as float ) *60 * 60 * 24) < {}
+    ORDER BY record_id DESC LIMIT 1""".format(now, 5)
+    cur.execute(query)
     data = dictfetchone(cur)
     return jsonify(data)
+
+
+@app.route('/record_thermal')
+def record_thermal():
+    record_id = request.args.get('record_id', type=int, default=None)
+    if record_id is not None:
+
+        cur = get_db().cursor()
+        cur.execute("""SELECT record_id, t_image_thermal FROM records WHERE record_id=? LIMIT 1""", (record_id,))
+        data = dictfetchone(cur)
+
+        image_thermal = data.get('t_image_thermal')
+        if image_thermal is not None:
+            data['t_image_thermal'] = b64encode(image_thermal).decode("utf-8")
+
+        return jsonify(data)
+    else:
+        return None
+
+
+@app.route('/record_rgb')
+def record_rgb():
+    record_id = request.args.get('record_id', type=int, default=None)
+    if record_id is not None:
+
+        cur = get_db().cursor()
+        cur.execute("""SELECT record_id, t_image_rgb FROM records WHERE record_id=? LIMIT 1""", (record_id,))
+        data = dictfetchone(cur)
+
+        image_rgb = data.get('t_image_rgb')
+        if image_rgb is not None:
+            data['t_image_rgb'] = b64encode(image_rgb).decode("utf-8")
+
+        return jsonify(data)
+    else:
+        return None
 
 
 @app.route('/records')
@@ -106,6 +157,12 @@ def records():
 
     cur.execute("SELECT * FROM records ORDER BY record_id DESC LIMIT ? OFFSET ?", (page_size, offset))
     data = dictfetchall(cur)
+
+    for record in data:
+        image_rgb = record.get('t_image_rgb')
+        if image_rgb is not None:
+            record['t_image_rgb'] = b64encode(image_rgb).decode("utf-8")
+
     for record in data:
         image_thermal = record.get('t_image_thermal')
         if image_thermal is not None:
@@ -113,11 +170,27 @@ def records():
 
     response = {
         'count': total,
-        'next': page+1 if page < num_pages else None,
-        'previous': page-1 if page > 0 else None,
+        'next': page + 1 if page < num_pages else None,
+        'previous': page - 1 if page > 0 else None,
         'results': data
     }
 
+    return jsonify(response)
+
+
+@app.route('/wifi_status')
+def wifi_status():
+    ip = hpm.get_wlan0_ip()
+    # Conected to HotSpot
+    if ip[:7] == "10.0.0.":
+        ssid = hpm.get_hostapd_name()
+    # Connected to wlan
+    else:
+        ssid = hpm.get_ssid_name()
+    response = {
+        'ssid': ssid,
+        'ip': ip
+    }
     return jsonify(response)
 
 
@@ -130,12 +203,6 @@ def wifi_settings():
     hpm.set_new_wifi(data['ssid'], data['password'])
     hpm.change_network()
     hpm.reset_autohotspot()
-
-    # Todo update rpi wifi settings
-    # with open('configfile', 'rb+') as f:
-    #     content = f.read()
-    #
-    #     f.truncate()
 
     return jsonify(data)
 
@@ -173,7 +240,7 @@ def flask_main():
 #
 #     flask_thread = threading.Thread(target=flask_main)
 #     flask_thread.start()
-#
+# S
 #     # Start camera thread
 #     CameraThermal()
 #

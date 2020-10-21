@@ -6,7 +6,6 @@ import pickle
 from scripts.opencv_processing import OpenCVProcessor
 import cv2
 
-
 class CameraThermal(BaseCamera):
 
     @staticmethod
@@ -55,3 +54,4 @@ class CameraThermal(BaseCamera):
             }
 
             yield frame
+

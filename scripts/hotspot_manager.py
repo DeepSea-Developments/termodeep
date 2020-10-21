@@ -3,6 +3,7 @@ import os
 
 WPA_SUPPLICANT_FILE = '/etc/wpa_supplicant/wpa_supplicant.conf'
 
+
 # This works to reset autohotspot. If in hotspot, first search available networks and if not, start hotspot.
 def reset_autohotspot():
     sudoPassword = 'raspberry'
@@ -25,6 +26,7 @@ def get_networks():
     command = 'iwlist wlan0 scan|grep SSID'
     p = os.system('echo %s|sudo -S %s' % (sudoPassword, command))
     return p
+
 
 def set_new_password(password):
     with open(WPA_SUPPLICANT_FILE, 'r') as f:
@@ -51,4 +53,25 @@ def set_new_wifi(ssid, password):
         f.close()
 
 
+# Get IP of wlan0 interface
+def get_wlan0_ip():
+    ipv4 = re.search(re.compile(r'(?<=inet )(.*)(?=\/)', re.M), os.popen('ip addr show wlan0').read()).groups()[0]
+    return ipv4
 
+
+# Get hostapd name
+def get_hostapd_name():
+    HOSTAPD_FILE = '/etc/hostapd/hostapd.conf'
+    f = open(HOSTAPD_FILE,'r')
+    data = f.read()
+    f.close()
+    return re.search(r'\nssid=(.*)', data).group(1)
+
+
+# Get SSID name
+def get_ssid_name():
+    WPA_SUPPLICANT_FILE = '/etc/wpa_supplicant/wpa_supplicant.conf'
+    f = open(WPA_SUPPLICANT_FILE, 'r')
+    data = f.read()
+    f.close()
+    return re.search(r'ssid="(.*)"', data).group(1)

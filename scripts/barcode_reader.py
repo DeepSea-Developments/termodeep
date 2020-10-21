@@ -1,6 +1,7 @@
 import json
 import re
 import threading
+import lzstring
 from datetime import datetime
 
 import requests
@@ -10,8 +11,8 @@ from time import sleep
 
 
 class Person:
-    def __init__(self, identification, name, last_name, gender, birth_date, expiration_date=None,
-                 blood_type=None):
+    def __init__(self, identification=None, name=None, last_name=None, gender=None, birth_date=None,
+                 expiration_date=None, blood_type=None, extra_json=None, extra_txt=None, alert=None):
         self.identification = identification
         self.name = name
         self.last_name = last_name
@@ -19,6 +20,9 @@ class Person:
         self.birth_date = birth_date
         self.expiration_date = expiration_date
         self.blood_type = blood_type
+        self.extra_json = extra_json
+        self.extra_txt = extra_txt
+        self.alert = alert
 
     @staticmethod
     def append_names(name1, name2):
@@ -30,6 +34,7 @@ class BarcodeType(Enum):
     QR = 0
     CEDULA_COLOMBIA = 1
     CEDULA_COSTA_RICA = 2
+    QR_DSD = 3
 
 
 class BarcodeReader:
@@ -49,11 +54,19 @@ class BarcodeReader:
         self.serial.close()
 
     @staticmethod
-    def _decode_string(values):
+    def _decode_string_utf_8(values):
         string_data = ''
         for data in values:
             if data != b'\x00':
                 string_data = string_data + data.decode('utf-8')
+        return string_data
+
+    @staticmethod
+    def _decode_string_iso_8859_1(values):
+        string_data = ''
+        for data in values:
+            if data != b'\x00':
+                string_data = string_data + data.decode('iso-8859-1')
         return string_data
 
     def get_reading(self):
@@ -64,23 +77,31 @@ class BarcodeReader:
                 value = self.serial.read()
                 msg.append(value)
 
+            # TODO improve code type detection  to allow qr codes of length 531 and 700
+            if len(msg) == 531:
+                code_type = BarcodeType.CEDULA_COLOMBIA
+            elif len(msg) == 700:
+                code_type = BarcodeType.CEDULA_COSTA_RICA
+            else:
+                code_type = BarcodeType.QR
+
             try:
-
-                if len(msg) == 531:
-                    code_type = BarcodeType.CEDULA_COLOMBIA
+                data = None
+                if code_type == BarcodeType.CEDULA_COLOMBIA:
                     person = Person(
-                        identification=self._decode_string(msg[48:58]).lstrip('0'),
-                        name=Person.append_names(self._decode_string(msg[104:127]),
-                                                 self._decode_string(msg[127:150])),
-                        last_name=Person.append_names(self._decode_string(msg[58:81]),
-                                                      self._decode_string(msg[81:104])),
-                        gender=self._decode_string(msg[151:152]),
-                        birth_date=self._decode_string(msg[152:156]) + '-' + self._decode_string(
-                            msg[156:158]) + '-' + self._decode_string(msg[158:160]),
-                        blood_type=self._decode_string(msg[166:169])
+                        identification=self._decode_string_utf_8(msg[48:58]).lstrip('0'),
+                        name=Person.append_names(self._decode_string_utf_8(msg[104:127]),
+                                                 self._decode_string_utf_8(msg[127:150])),
+                        last_name=Person.append_names(self._decode_string_utf_8(msg[58:81]),
+                                                      self._decode_string_utf_8(msg[81:104])),
+                        gender=self._decode_string_utf_8(msg[151:152]),
+                        birth_date=self._decode_string_utf_8(msg[152:156]) + '-' + self._decode_string_utf_8(
+                            msg[156:158]) + '-' + self._decode_string_utf_8(msg[158:160]),
+                        blood_type=self._decode_string_utf_8(msg[166:169])
                     )
+                    data = person.__dict__
 
-                elif len(msg) == 700:
+                elif code_type == BarcodeType.CEDULA_COSTA_RICA:
                     d = ""
                     j = 0
                     count = 0
@@ -96,20 +117,58 @@ class BarcodeReader:
                             d += ' '
                         j = j + 1
 
-                    code_type = BarcodeType.CEDULA_COSTA_RICA
                     person = Person(
                         identification=d[0:9].strip(),
                         name=d[61:91].strip(),
                         last_name=Person.append_names(d[9:35].strip(), d[35:61].strip()),
-                        gender=d[91].strip(),
-                        birth_date=d[92:96].strip() + '-' + d[96:98].strip() + '-' + d[98:100].strip(),
-                        expiration_date=d[100:104].strip() + '-' + d[104:106].strip() + '-' + d[106:108].strip(),
                     )
-                else:
-                    return
+                    data = person.__dict__
+
+                elif code_type == BarcodeType.QR:
+                    decoded_data = (''.join(self._decode_string_iso_8859_1(msg)))
+
+                    if decoded_data.startswith('DSD:'):
+                        code_type = BarcodeType.QR_DSD
+                        x = lzstring.LZString()
+                        base64data = decoded_data[4:]
+                        json_string = x.decompressFromBase64(base64data)
+
+                        data_dict = json.loads(json_string)
+                        identification = data_dict['id']
+                        name = data_dict['fn']
+                        last_name = data_dict['ln']
+
+                        data_dict.pop('id', None)
+                        data_dict.pop('fn', None)
+                        data_dict.pop('ln', None)
+
+                        alert = False
+                        for key in data_dict:
+                            if key.startswith('r'):
+                                response_number = key[1:]
+                                alert_key = 'a'+response_number
+                                if alert_key in data_dict and data_dict[alert_key] == data_dict[key]:
+                                    alert = True
+                                    break
+
+                        person = Person(
+                            identification=identification,
+                            name=name,
+                            last_name=last_name,
+                            extra_json=data_dict,
+                            alert=alert
+                        )
+                        data = person.__dict__
+
+                    else:
+                        person = Person(
+                            extra_txt=decoded_data
+                        )
+                        data = person.__dict__
+
                 return {
                     'barcode_type': code_type.value,
-                    'data': person.__dict__,
+                    'data': data,
                     'timestamp': datetime.now().isoformat()
                 }
             except Exception as e:

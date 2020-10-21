@@ -35,40 +35,62 @@
       <section id="stream">
         <div class="border-title">
           <h3 class="title">LIVE STREAM</h3>
-          <span class="sub-title">TermoDeep v1.1</span>
+          <span class="sub-title" id="termodeep_version">TermoDeep v1.1</span>
+          <br>
+          <span class="sub-title">SSID: </span><span class="sub-title" id="ssid"></span>
+          <br>
+          <span class="sub-title">IP: </span><span class="sub-title" id="ip"></span>
+
         </div>
         <div class="container-fluid">
           <div class="row p-5">
             <div class="col-md-4">
               <div class="form-group">
-                <label class="sub-title">Nombre:</label>
+                <label class="sub-title" id="lbl_name">Nombre:</label>
                 <h3 style="color: #fff;" id="name"></h3>
               </div>
               <div class="form-group">
-                <label class="sub-title">Cédula:</label>
+                <label class="sub-title" id="lbl_identification">Cédula:</label>
                 <h3 style="color: #fff;" id="identification"></h3>
               </div>
               <div class="form-group">
-                <label class="sub-title">Género:</label>
+                <label class="sub-title" id="lbl_gender">Género:</label>
                 <h3 style="color: #fff;" id="gender"></h3>
               </div>
               <div class="form-group">
-                <label class="sub-title">Fecha de Ingreso:</label>
+                <label class="sub-title" id="lbl_timestamp">Fecha de Ingreso:</label>
                 <h3 style="color: #fff;" id="timestamp"></h3>
               </div>
               <div class="form-group">
-                <label class="sub-title">Fecha de Nacimiento:</label>
+                <label class="sub-title" id="lbl_birth_date">Fecha de Nacimiento:</label>
                 <h3 style="color: #fff;" id="birth_date"></h3>
               </div>
               <div class="form-group">
-                <label class="sub-title">Fecha de Vencimiento:</label>
+                <label class="sub-title" id="lbl_expiration_date">Fecha de Vencimiento:</label>
                 <h3 style="color: #fff;" id="expiration_date"></h3>
+              </div>
+              <div class="form-group">
+                <label class="sub-title" id="lbl_document_type">Tipo de documento:</label>
+                <h3 style="color: #fff;" id="document_type"></h3>
+              </div>
+              <div class="form-group">
+                <label class="sub-title" id="lbl_nationality">Nacionalidad:</label>
+                <h3 style="color: #fff;" id="nationality"></h3>
               </div>
             </div>
             <div class="col-md-4">
               <img src="{{ url_for('video_feed') }}" style="width: 100%">
             </div>
             <div class="col-md-4">
+              <div id="captured_images" class="row pb-2">
+                <div class="column">
+                  <img id="image_rgb" style="width: 60%">
+                </div>
+                <div class="column">
+                  <img id="image_thermal" style="width: 71%">
+                </div>
+              </div>
+
               <div class="form-group">
                 <label class="sub-title">Temperatura estimada del cuerpo:</label>
                 <h3 style="color: #fff;" id="temperature_body"></h3>
@@ -78,16 +100,19 @@
                 <h3 style="color: #fff;" id="temperature_skin"></h3>
               </div>
               <div class="form-group">
-                <label class="sub-title">Ingreso:</label>
+                <!-- <label class="sub-title">Ingreso:</label> -->
                 <div>
-                  <button type="button" class="btn btn-success alert_button display_none" id="alert_0">
-                    Permitido
+                  <button type="button" class="btn btn-success alert_button display_none mt-3" id="alert_0">
+                    Temperatura Aceptable
                   </button>
-                  <button type="button" class="btn btn-warning alert_button display_none" id="alert_1">
-                    Advertencia
+                  <button type="button" class="btn btn-warning alert_button display_none mt-3" id="alert_1">
+                    Temperatura Elevada
                   </button>
-                  <button type="button" class="btn btn-danger alert_button display_none" id="alert_2">
-                    Peligro
+                  <button type="button" class="btn btn-danger alert_button display_none mt-3" id="alert_2">
+                    Temperatura Alta
+                  </button>
+                  <button type="button" class="btn btn-danger alert_button display_none mt-3" id="alert_p">
+                    Alerta en Formulario
                   </button>
                 </div>
               </div>
@@ -130,6 +155,7 @@
                     <th style="color: #0f5cbe;">Temperatura °C</th>
                     <th style="color: #0f5cbe;">Ingreso</th>
                     <th style="color: #0f5cbe;">Térmica</th>
+                    <th style="color: #0f5cbe;">Color</th>
                   </tr>
                 </thead>
                 <tbody id="table-register">
@@ -270,16 +296,105 @@
       ampm;
   }
 
+  var id_current_record;
+  var has_thermal = false;
+  var has_rgb = false;
+
   function getLatestRecord() {
     $.get("/latest_record", function (data) {
       if (data) {
-        $('#name').text(data.p_name + ' ' + data.p_last_name);
-        $('#identification').text(data.p_identification);
-        $('#gender').text(data.p_gender);
-        timestamp = new Date(data.p_timestamp);
-        $('#timestamp').text(formateDateTime(timestamp));
-        $('#birth_date').text(data.p_birth_date);
-        $('#expiration_date').text(data.p_expiration_date);
+        if(data.p_name){
+          $('#name').text(data.p_name + ' ' + data.p_last_name);
+          $('#lbl_name').show();
+          $('#name').show();
+        }
+        else
+        {
+          $('#lbl_name').hide();
+          $('#name').hide();
+        }
+
+        if(data.p_identification){
+          $('#identification').text(data.p_identification);
+          $('#lbl_identification').show();
+          $('#identification').show();
+        }
+        else
+        {
+          $('#lbl_identification').hide();
+          $('#identification').hide();
+        }
+
+        if(data.p_gender){
+          $('#gender').text(data.p_gender);
+          $('#lbl_gender').show();
+          $('#gender').show();
+        }
+        else
+        {
+          $('#lbl_gender').hide();
+          $('#gender').hide();
+        }
+
+        if(data.p_timestamp){
+          timestamp = new Date(data.p_timestamp);
+          $('#timestamp').text(formateDateTime(timestamp));
+          $('#lbl_timestamp').show();
+          $('#timestamp').show();
+        }
+        else
+        {
+          $('#lbl_timestamp').hide();
+          $('#timestamp').hide();
+        }
+
+        if(data.p_birth_date){
+          $('#birth_date').text(data.p_birth_date);
+          $('#lbl_birth_date').show();
+          $('#birth_date').show();
+        }
+        else
+        {
+          $('#lbl_birth_date').hide();
+          $('#birth_date').hide();
+        }
+
+        if(data.p_expiration_date){
+          $('#expiration_date').text(data.p_expiration_date);
+          $('#lbl_expiration_date').show();
+          $('#expiration_date').show();
+        }
+        else
+        {
+          $('#lbl_expiration_date').hide();
+          $('#expiration_date').hide();
+        }
+
+        if(data.p_nationality){
+          $('#nationality').text(data.p_nationality);
+          $('#lbl_nationality').show();
+          $('#nationality').show();
+        }
+        else
+        {
+          $('#lbl_nationality').hide();
+          $('#nationality').hide();
+        }
+
+        if(data.p_document_type){
+          $('#document_type').text(data.p_document_type);
+          $('#lbl_document_type').show();
+          $('#document_type').show();
+        }
+        else
+        {
+          $('#lbl_document_type').hide();
+          $('#document_type').hide();
+        }
+
+
+
+
         $('#temperature_body').text(data.t_temperature_body);
         $('#temperature_skin').text(data.t_temperature_p80);
         if (data.t_alert == 0) {
@@ -302,6 +417,79 @@
           $('#alert_1').hide();
           $('#alert_2').hide();
         }
+        
+        if (data.p_alert == 1) {
+          $('#alert_p').show();
+        }
+        else {
+          $('#alert_p').hide();
+        }
+
+        
+        if (id_current_record == data.record_id){
+          if (!has_rgb) {
+            getRecordRGBImage(id_current_record);
+          }
+          if (!has_thermal) {
+            getRecordThermalImage(id_current_record);
+          }
+        }
+        else{
+          id_current_record = data.record_id;
+          getRecordRGBImage(id_current_record);
+          getRecordThermalImage(id_current_record);
+        }
+      }
+      else
+      {
+        $('#name').hide();
+        $('#identification').hide();
+        $('#gender').hide();
+        $('#timestamp').hide();
+        $('#birth_date').hide();
+        $('#expiration_date').hide();
+        $('#nationality').hide();
+        $('#document_type').hide();
+        $('#alert_0').hide();
+        $('#alert_1').hide();
+        $('#alert_2').hide();
+        $('#alert_p').hide();
+        $('#image_thermal').hide();
+        $('#image_rgb').hide();
+        $('#temperature_body').hide()
+        $('#temperature_skin').hide()
+      }
+    });
+  }
+
+  function getRecordThermalImage(record_id) {
+    $.get("/record_thermal", { record_id: record_id },  function (data) {
+      if (data) {
+        if (data.t_image_thermal) {
+          has_thermal = true;
+          $('#image_thermal').show();
+          $("#image_thermal").attr("src", 'data:image/png;base64, '+data.t_image_thermal);
+        }
+        else{
+          has_thermal = false;
+          $('#image_thermal').hide();
+        }
+      }
+    });
+  }
+
+  function getRecordRGBImage(record_id) {
+    $.get("/record_rgb", { record_id: record_id },  function (data) {
+      if (data) {
+        if (data.t_image_rgb) {
+          has_rgb = true;
+          $('#image_rgb').show();
+          $("#image_rgb").attr("src", 'data:image/jpeg;base64, '+data.t_image_rgb);
+        }
+        else{
+          has_rgb = false;
+          $('#image_rgb').hide();
+        }
       }
     });
   }
@@ -322,16 +510,17 @@
 
           alert_html = ""
           if (record.t_alert == 0) {
-            alert_html = "<button type='button' class='btn btn-success alert_button'>Permitido</button>";
+            alert_html = "<button type='button' class='btn btn-success alert_button_records'>Permitido</button>";
           }
           else if (record.t_alert == 1) {
-            alert_html = "<button type='button' class='btn btn-warning alert_button'>Advertencia</button>";
+            alert_html = "<button type='button' class='btn btn-warning alert_button_records'>Advertencia</button>";
           }
           else if (record.t_alert == 2) {
-            alert_html = "<button type='button' class='btn btn-danger alert_button'>Peligro</button>";
+            alert_html = "<button type='button' class='btn btn-danger alert_button_records'>Peligro</button>";
           }
           tbl_row += "<td class='sub-title'>" + alert_html + "</td>";
           tbl_row += "<td>" + (record.t_image_thermal ? "<img src='data:image/png;base64, " + record.t_image_thermal + "' width=200>" : '') + "</td>";
+          tbl_row += "<td>" + (record.t_image_rgb ? "<img src='data:image/png;base64, " + record.t_image_rgb + "' width=200>" : '') + "</td>";
           tbl_body += "<tr>" + tbl_row + "</tr>";
         });
         $("#table-register").html(tbl_body);
@@ -356,6 +545,18 @@
     });
   }
 
+  function get_wifi_status()
+  {
+    $.get("/wifi_status", function (data)
+    {
+      if(data)
+      {
+        $('#ssid').text(data.ssid)
+        $('#ip').text(data.ip)
+      }
+    });
+  }
+
   $(document).ready(function () {
     // $('#client').val('CelsiaYumbo');
     // $('#label').val('Edificio Nova');
@@ -372,7 +573,9 @@
     //   $('#camera-ids').html(label);
     // });
 
-    setInterval(getLatestRecord, 500);
+    get_wifi_status()
+    setInterval(getLatestRecord, 1000);
+    setInterval(get_wifi_status, 30*1000);
 
     var removeActive = function () {
       $("nav a").parents("li, ul").removeClass("active");

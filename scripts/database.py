@@ -4,7 +4,8 @@ from flask import g
 import sqlite3
 
 
-DATABASE = 'database.db'
+# DATABASE = 'database.db'
+DATABASE = 'database_v1.db'
 
 
 def get_db():

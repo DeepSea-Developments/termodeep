@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS "records"
     [p_birth_date] TEXT,
     [p_expiration_date] TEXT,
     [p_blood_type] NVARCHAR(3),
+    [p_extra_json] TEXT,
+    [p_extra_txt] TEXT,
+    [p_alert] INTEGER,
 
     [t_timestamp] TEXT,
     [t_temperature_mean] REAL,
@@ -29,5 +32,6 @@ CREATE TABLE IF NOT EXISTS "records"
     [t_temperature_p90] REAL,
     [t_temperature_body] REAL,
     [t_image_thermal] BLOB,
+    [t_image_rgb] BLOB,
     [t_alert] INTEGER
 );

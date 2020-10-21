@@ -1,6 +1,7 @@
 import sqlite3
 import threading
 from datetime import datetime, timedelta
+from io import BytesIO
 
 from scripts.helpers import get_args
 from scripts.camera_thermal import CameraThermal
@@ -20,10 +21,13 @@ class RecordCompleter:
     ALERT_WARNING = 1
     ALERT_DANGER = 2
 
-    def __init__(self, record_id, delay=2000):
+    JPEG_QUALITY = 85
+
+    def __init__(self, record_id, rgb_camera, delay=2000):
         # print('init record_completer')
         self.record_id = record_id
         self.DELAY = delay
+        self.rgb_camera = rgb_camera
 
         args = get_args()
         if args.warning_temp is not None:
@@ -45,9 +49,13 @@ class RecordCompleter:
         return alert
 
     def _thread(self):
+    
+    # Take picture
 
         camera = CameraThermal()
+
         end_time = datetime.now() + timedelta(milliseconds=self.DELAY)
+
         while True:
             frame = camera.get_frame()
             temperatures = frame.get('temperatures')
@@ -55,6 +63,11 @@ class RecordCompleter:
                 # Restart timer
                 end_time = datetime.now() + timedelta(milliseconds=self.DELAY)
             elif datetime.now() > end_time:
+                # Take picture
+                image_stream = BytesIO()
+                self.rgb_camera.capture(image_stream, format='jpeg', quality=self.JPEG_QUALITY)
+                image_rgb = image_stream.getvalue()
+
                 db = sqlite3.connect(DATABASE)
                 cur = db.cursor()
 
@@ -63,7 +76,7 @@ class RecordCompleter:
                     t_temperature_min = ?, t_temperature_max = ?, t_temperature_p10 = ?, t_temperature_p20 = ?, 
                     t_temperature_p30 = ?, t_temperature_p40 = ?, t_temperature_p50 = ?, t_temperature_p60 = ?, 
                     t_temperature_p70 = ?, t_temperature_p80 = ?, t_temperature_p90 = ?, t_temperature_body = ?,
-                    t_image_thermal = ?, t_alert = ? 
+                    t_image_thermal = ?, t_image_rgb = ?, t_alert = ? 
                     WHERE record_id = ?""",
                     (datetime.now().isoformat(), temperatures.get('temperature_mean'),
                      temperatures.get('temperature_median'), temperatures.get('temperature_min'),
@@ -72,7 +85,7 @@ class RecordCompleter:
                      temperatures.get('temperature_p40'), temperatures.get('temperature_p50'),
                      temperatures.get('temperature_p60'), temperatures.get('temperature_p70'),
                      temperatures.get('temperature_p80'), temperatures.get('temperature_p90'),
-                     temperatures.get('temperature_body'), frame.get('thermal_image'),
+                     temperatures.get('temperature_body'), frame.get('thermal_image'), image_rgb,
                      self.calculate_alert(temperatures.get('temperature_body')), self.record_id))
                 db.commit()
                 # print('Stored')
