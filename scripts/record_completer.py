@@ -1,16 +1,17 @@
 import sys
 import os
-sys.path.append(os.path.abspath("/opt/termodeep/scripts/"))
+# dir_path = os.path.dirname(os.path.realpath(__file__))
+# sys.path.append(os.path.abspath(dir_path))
 
 import sqlite3
 from datetime import datetime, timedelta
 from io import BytesIO
 
-from cloud_synchronizer import upload_record_by_id
-from helpers import get_args, load_config
-from camera_thermal import CameraThermal
-from database import DATABASE
-import camera_rgb
+from scripts.cloud_synchronizer import upload_record_by_id
+from scripts.helpers import get_args, load_config
+from scripts.camera_thermal import CameraThermal
+from scripts.database import DATABASE
+import scripts.camera_rgb as camera_rgb
 
 
 class RecordCompleter():

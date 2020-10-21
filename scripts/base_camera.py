@@ -1,7 +1,7 @@
 import time
 import threading
 
-from helpers import stop_camera_thread
+from scripts.helpers import stop_camera_thread
 
 try:
     from greenlet import getcurrent as get_ident

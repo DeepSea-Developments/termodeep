@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% set active_page = 'registros' %}
+{% block title%}Registros{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="/static/css/records.css">
+<link rel="stylesheet" type="text/css" href="/static/includes/DataTables/datatables.min.css"/>
+
+<script type="text/javascript" src="/static/js/records.js"></script>
+<script type="text/javascript" src="/static/includes/DataTables/datatables.min.js"></script>
+{% endblock %}
+{% block content %}
+
+
+<div class="container-fluid">
+  <!-- Filtros -->
+  <div class="row row mx-2 my-4">
+    <div class="col-md-2">
+      <div class="form-group">
+        <label for="ingreso">Ingreso</label>
+        <select class="form-control" id="f_ingreso">
+          <option value="0">Permitido</option>
+          <option value="1">Advertencia</option>
+          <option value="2">Peligro</option>
+          <option value="3">Todos</option>
+        </select>
+      </div>
+    </div>
+    <div class="col-md-4 align-items-center">
+      <div class="mx-2 my-4">
+        <button type="button" class="btn btn-primary" onclick="javascript:records_search()">Buscar</button>
+        <button type="button" class="btn btn-success" onclick="javascript:download_csv()">Descargar CSV</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Datatable -->
+  <div class="row mx-2 my-4">
+    <div class="col-md-12" style="margin-bottom: 100px;">
+      <table id="table_records" class="display" style="width:100%">
+          <thead>
+            <tr>
+              <th class="color-primary">Fecha y Hora</th>
+              <th class="color-primary">Identificacion</th>
+              <th class="color-primary">Nombres</th>
+              <th class="color-primary">Apellidos</th>
+              <th class="color-primary">Temperatura</th>
+              <th class="color-primary">Ingreso</th>
+              <th class="color-primary">Imagen Termica</th>
+              <th class="color-primary">Imagen Color</th>
+            </tr>
+          </thead>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}

@@ -1,15 +1,15 @@
 import sys
 import os
-sys.path.append(os.path.abspath("/opt/termodeep/scripts/"))
+# dir_path = os.path.dirname(os.path.realpath(__file__))
+# sys.path.append(os.path.abspath(dir_path))
 
 import time
 import socket
 import pickle
 import serial
 import threading
-import re
 
-from m80_rpi import M80
+from scripts.m80_rpi import M80
 from datetime import datetime
 
 
@@ -90,10 +90,11 @@ class StreamThermalCamera:
 
         run_main = True
         print('Starting camera stream thread.')
-        get_number = re.compile(r'(\d+\.?\d*)')
         while run_main and self.cam:
 
             try:
+                # time.sleep(1)
+                # self.cam.OPC(10)
                 time.sleep(0.1)
                 image = self.cam.get_frame()
                 msg = pickle.dumps(image)
@@ -102,20 +103,12 @@ class StreamThermalCamera:
 
                 cam_temp_diff = abs((self.cam.temp - self.base_temp))
                 difference = datetime.now() - self.last_time
-
-                # self.serial_mcu.write(b'temp?\n')
-                # time.sleep(0.5)
-                # match = get_number.search(self.serial_mcu.read_all().decode("utf-8"))
-                # if match:
-                #     bb_temp = match.group(0)
-                #     print(bb_temp)
-
-
-                # time.sleep(0.5)
-                # self.serial_mcu.write(b'status\n')
-                # print(self.serial_mcu.read_all().decode("utf-8"))
-
-
+                # print(difference)
+                #
+                # print(self.cam.temp)
+                # print(self.base_temp)
+                # print(cam_temp_diff)
+                # print("Temp: {}     Diff: {} ".format(self.cam.temp, cam_temp_diff))
                 if ((cam_temp_diff > self.OPC_DELTA_TEMP) and (
                         cam_temp_diff < 60)) or difference.seconds > self.OPC_TIMEOUT:
                     print("{}------OPC at temp {} c ------".format(datetime.now(), self.cam.temp))
@@ -125,7 +118,6 @@ class StreamThermalCamera:
                     self.cam.stop_video()
                     self.termodeep_opc()
                     time.sleep(1)
-                    self.serial_mcu.write(b'start\n')
                     self.cam.start_video_TBP()
             except KeyboardInterrupt:
                 run_main = False

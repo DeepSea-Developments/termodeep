@@ -1,15 +1,16 @@
 import sys
 import os
-sys.path.append(os.path.abspath("/opt/termodeep/scripts/"))
+# dir_path = os.path.dirname(os.path.realpath(__file__))
+# sys.path.append(os.path.abspath(dir_path))
 
 import cv2
 import socket
 import pickle
 import configparser
 
-from helpers import get_args, load_config
-from base_camera import BaseCamera
-from opencv_processing import OpenCVProcessor
+from scripts.helpers import get_args, load_config
+from scripts.base_camera import BaseCamera
+from scripts.opencv_processing import OpenCVProcessor
 
 
 class CameraThermal(BaseCamera):
@@ -24,7 +25,6 @@ class CameraThermal(BaseCamera):
 
         #Use a config file
         conf = load_config()
-        
         args = get_args()
 
         processor = OpenCVProcessor(args.calibrating)

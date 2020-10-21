@@ -1,19 +1,24 @@
 import sys
 import os
-sys.path.append(os.path.abspath("/opt/termodeep/scripts/"))
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.abspath(dir_path))
 
 import argparse
 import logging
 import sys
 import uuid
 import configparser
-import threading
+import threading 
 
 from serial.tools.list_ports import comports
 
 #Set stop signal - camera thread
 global stop_camera_thread
 stop_camera_thread = threading.Event()
+
+#Set path 
+global conf_path
+conf_path = dir_path[0:-8] + '/conf/'
 
 
 def get_args():
@@ -72,9 +77,10 @@ def get_ports():
     ports = (port_device, port_description, port_vid)
     return ports
 
+
 def load_config():
     config = configparser.ConfigParser()
-    config.read('/opt/termodeep/conf/termodeep.ini')
+    config.read(conf_path + 'termodeep.ini')
 
     if 'CUSTOM' in config:
         conf = config['CUSTOM']

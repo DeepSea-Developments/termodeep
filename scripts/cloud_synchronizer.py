@@ -1,13 +1,14 @@
 import sys
 import os
-sys.path.append(os.path.abspath("/opt/termodeep/scripts/"))
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.abspath(dir_path))
 
 import sqlite3
 import threading
 import time
 import requests
 from base64 import b64encode
-from database import DATABASE, dictfetchone, dictfetchall
+from scripts.database import DATABASE, dictfetchone, dictfetchall
 
 
 def get_record(record_id):

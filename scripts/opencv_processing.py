@@ -110,8 +110,11 @@ class OpenCVProcessor:
 
         # Mapa de calor
         img_large = cv2.applyColorMap(img, cv2.COLORMAP_PLASMA)
-        img_large = cv2.resize(img_large, (0, 0), fx=self.OUTPUT_IMAGE_SCALE, fy=self.OUTPUT_IMAGE_SCALE,
-                               interpolation=cv2.INTER_NEAREST)
+
+        img_large = cv2.resize(img_large, 
+            (0, 0), fx=self.OUTPUT_IMAGE_SCALE, 
+            fy=self.OUTPUT_IMAGE_SCALE,
+            interpolation=cv2.INTER_NEAREST)
 
         # Dibujar los contornos
         # cv2.drawContours(img_large, contours, -1, (0, 0, 255), thickness=1)
@@ -160,10 +163,10 @@ class OpenCVProcessor:
             }
 
             try:
-                cv2.rectangle(img_large, (x, y), (x + w, y + h), (255, 255, 0), thickness=2)
+                cv2.rectangle(img_large, (x, y), (x+w, y+h), (255, 255, 0), thickness=2)
 
                 texto = "({:.1f})".format(temperatures.get('temperature_body'))
-                cv2.putText(img_large, texto, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
+                cv2.putText(img_large, texto, (x, y+h-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
 
                 if self.calibrating:
                     raw_masked = ma.masked_array(frame_raw, ~mask)

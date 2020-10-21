@@ -4,8 +4,8 @@ import sys
 
 from flask import g
 
-# DATABASE = 'database.db'
 DATABASE = 'database_v2.db'
+# DATABASE = 'database_v2(7-sept-2020).db'
 
 
 def get_db():
@@ -32,6 +32,16 @@ def dictfetchall(cursor):
     # Returns all rows from a cursor as a dict
     desc = cursor.description
     return [_dict_helper(desc, row) for row in cursor.fetchall()]
+
+
+def arrayfetchall(cursor):
+    # Returns all rows from a cursor as a row of rows
+    data_out=[]
+    for row in cursor.fetchall():
+        x = [i for i in row]
+        data_out.append(x)
+
+    return data_out
 
 
 def init_db(app):
