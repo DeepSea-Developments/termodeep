@@ -1,0 +1,392 @@
+<html>
+
+<head>
+  <meta name="google" content="notranslate">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>TermoDeep - Live Stream</title>
+  <meta http-equiv="refresh" content="600">
+  <link rel="stylesheet" href="../static/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="../static/css/style.css">
+  <script src="../static/js/jquery-3.5.1.min.js"></script>
+  <script src="../static/bootstrap/js/bootstrap.min.js"></script>
+</head>
+
+<body class="bg-dark">
+  <div class="wrapper">
+    <!-- Sidebar -->
+    <nav id="sidebar">
+      <ul class="list-unstyled components">
+        <li class="text-center" onclick="goTo('#live-stream')"><a href="#live-stream"><img style="width: 30px;"
+              src="../static/images/camera.png" /></a>
+        </li>
+        <li class="text-center" onclick="goTo('#records')"><a href="#records"><img style="width: 30px;"
+              src="../static/images/user.png" /></a>
+        </li>
+        <li class="text-center" onclick="goTo('#settings')"><a href="#settings"><img style="width: 30px;"
+              src="../static/images/settings.png" /></a>
+        </li>
+      </ul>
+      <div class="sidebar-header">
+        <img class="logo" src="../static/images/verical_logo.png">
+      </div>
+    </nav>
+    <div id="content">
+      <section id="stream">
+        <div class="border-title">
+          <h3 class="title">LIVE STREAM</h3>
+          <span class="sub-title">TermoDeep v1.1</span>
+        </div>
+        <div class="container-fluid">
+          <div class="row p-5">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="sub-title">Nombre:</label>
+                <h3 style="color: #fff;" id="name"></h3>
+              </div>
+              <div class="form-group">
+                <label class="sub-title">Cédula:</label>
+                <h3 style="color: #fff;" id="identification"></h3>
+              </div>
+              <div class="form-group">
+                <label class="sub-title">Género:</label>
+                <h3 style="color: #fff;" id="gender"></h3>
+              </div>
+              <div class="form-group">
+                <label class="sub-title">Fecha de Ingreso:</label>
+                <h3 style="color: #fff;" id="timestamp"></h3>
+              </div>
+              <div class="form-group">
+                <label class="sub-title">Fecha de Nacimiento:</label>
+                <h3 style="color: #fff;" id="birth_date"></h3>
+              </div>
+              <div class="form-group">
+                <label class="sub-title">Fecha de Vencimiento:</label>
+                <h3 style="color: #fff;" id="expiration_date"></h3>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <img src="{{ url_for('video_feed') }}" style="width: 100%">
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="sub-title">Temperatura estimada del cuerpo:</label>
+                <h3 style="color: #fff;" id="temperature_body"></h3>
+              </div>
+              <div class="form-group">
+                <label class="sub-title">Temperatura de piel:</label>
+                <h3 style="color: #fff;" id="temperature_skin"></h3>
+              </div>
+              <div class="form-group">
+                <label class="sub-title">Ingreso:</label>
+                <div>
+                  <button type="button" class="btn btn-success alert_button display_none" id="alert_0">
+                    Permitido
+                  </button>
+                  <button type="button" class="btn btn-warning alert_button display_none" id="alert_1">
+                    Advertencia
+                  </button>
+                  <button type="button" class="btn btn-danger alert_button display_none" id="alert_2">
+                    Peligro
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="registros" class="d-none">
+        <div class="border-title">
+          <h3 class="title">Registros</h3>
+          <span class="sub-title">TermoDeep v1.1</span>
+        </div>
+        <div class="container-fluid">
+          <div class="row" style="padding: 50px;">
+            <!--div class="col-md-4">
+                <form>
+                    <div class="form-group">
+                    <label for="textUse" class="sub-title">User:</label>
+                    <input type="text" class="form-control" id="username" aria-describedby="emailHelp" placeholder="User Name">
+                    </div>
+                    <div class="form-group">
+                    <label for="textIdCard" class="sub-title">ID:</label>
+                    <input type="text" class="form-control" id="idCard" placeholder="ID Card">
+                    </div>
+                    <div class="form-group">
+                        <label for="textIdCard" class="sub-title">Company:</label>
+                        <input type="text" class="form-control" id="company" placeholder="Company">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </form>
+            </div-->
+            <div class="col-md-12" style="margin-bottom: 100px;">
+              <table class="table">
+                <thead class="thead-dark">
+                  <tr>
+                    <th style="color: #0f5cbe;">Fecha y Hora</th>
+                    <th style="color: #0f5cbe;">Identificación</th>
+                    <th style="color: #0f5cbe;">Nombres</th>
+                    <th style="color: #0f5cbe;">Apellidos</th>
+                    <th style="color: #0f5cbe;">Temperatura °C</th>
+                    <th style="color: #0f5cbe;">Ingreso</th>
+                    <th style="color: #0f5cbe;">Térmica</th>
+                  </tr>
+                </thead>
+                <tbody id="table-register">
+
+                </tbody>
+              </table>
+
+            <nav class="d-flex justify-content-center">
+              <ul class="pagination" id="records_pagination">
+              </ul>
+            </nav>
+            </div>
+          </div>
+
+        </div>
+      </section>
+      <section id="configuracion" class="d-none">
+        <div class="border-title">
+          <h3 class="title">SETTINGS</h3>
+          <span class="sub-title">TermoDeep v1.1</span>
+        </div>
+        <div class="container-fluid">
+          <div style="padding: 50px;">
+            <h4 class="section-title">Configuración de Red Wifi</h4>
+            <div class="row">
+              <div class="col-md-4">
+                <form id='form-wifi'>
+                  <div class="form-group">
+                    <label class="sub-title">SSID (Nombre de la red):</label>
+                    <input type="text" class="form-control" id="wifi_ssid">
+                  </div>
+                  <div class="form-group">
+                    <label class="sub-title">Constraseña:</label>
+                    <input type="password" class="form-control" id="wifi_password">
+                  </div>
+                  <button type="submit" class="btn btn-primary mt-2" onclick="updateWifiSettings()">
+                    Conectarse a la Red
+                  </button>
+                </form>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+    </div>
+    <div class="footer">
+      <div class="termodeep">
+        <img src="../static/images/termodeep_logo_grey.png" width="300" /> <br />
+        <span style="color: #4f4f4f;">Thermal Detection & Access Control System</span>
+      </div>
+    </div>
+  </div>
+</body>
+
+<script>
+  function goTo(hash) {
+    switch (hash) {
+      case '#live-stream':
+        $('#stream').removeClass('d-none');
+        $('#registros').addClass('d-none');
+        $('#configuracion').addClass('d-none');
+        break;
+      case '#records':
+        $('#stream').addClass('d-none');
+        $('#registros').removeClass('d-none');
+        $('#configuracion').addClass('d-none');
+        getRecords(1);
+        break;
+      case '#settings':
+        $('#stream').addClass('d-none');
+        $('#registros').addClass('d-none');
+        $('#configuracion').removeClass('d-none');
+        break;
+    }
+  }
+
+  function updateWifiSettings() {
+    ssid = $('#wifi_ssid').val();
+    password = $('#wifi_password').val();
+    if (ssid && password){
+      const body = {
+        ssid: ssid,
+        password: password
+      };
+      $.ajax({
+        type: 'POST',
+        url: '/wifi_settings',
+        data: JSON.stringify(body),
+        contentType: 'application/json',
+        success: function (response_data) {
+          console.log(response_data);
+          alert("Reiniciando");
+        }
+      });
+    }
+    else {
+      alert("Ingresa el SSID y la contraseña de la red.");
+    }
+  }
+
+  // function updateSettings() {
+  //   const client = $('#client').val();
+  //   const label = $('#label').val();
+  //   const id = $('#idCamera').val();
+  //   const params = {
+  //     client,
+  //     label,
+  //     id
+  //   }
+
+  //   $.ajax({
+  //     type: 'POST',
+  //     url: '/settings',
+  //     data: JSON.stringify(params),
+  //     contentType: 'application/json',
+  //     success: function (response_data) {
+  //       alert("Success");
+  //       $('#camera-id').html(label);
+  //       $('#camera-ids').html(label);
+  //     }
+  //   });
+  // }
+
+  function formateDateTime(m) {
+    var hours = m.getHours();
+    var ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+
+    return m.getFullYear() + "-" +
+      ("0" + (m.getMonth() + 1)).slice(-2) + "-" +
+      ("0" + m.getDate()).slice(-2) + " " +
+      hours + ":" +
+      ("0" + m.getMinutes()).slice(-2) + ":" +
+      ("0" + m.getSeconds()).slice(-2) + ' ' +
+      ampm;
+  }
+
+  function getLatestRecord() {
+    $.get("/latest_record", function (data) {
+      if (data) {
+        $('#name').text(data.p_name + ' ' + data.p_last_name);
+        $('#identification').text(data.p_identification);
+        $('#gender').text(data.p_gender);
+        timestamp = new Date(data.p_timestamp);
+        $('#timestamp').text(formateDateTime(timestamp));
+        $('#birth_date').text(data.p_birth_date);
+        $('#expiration_date').text(data.p_expiration_date);
+        $('#temperature_body').text(data.t_temperature_body);
+        $('#temperature_skin').text(data.t_temperature_p80);
+        if (data.t_alert == 0) {
+          $('#alert_0').show();
+          $('#alert_1').hide();
+          $('#alert_2').hide();
+        }
+        else if (data.t_alert == 1) {
+          $('#alert_0').hide();
+          $('#alert_1').show();
+          $('#alert_2').hide();
+        }
+        else if (data.t_alert == 2) {
+          $('#alert_0').hide();
+          $('#alert_1').hide();
+          $('#alert_2').show();
+        }
+        else {
+          $('#alert_0').hide();
+          $('#alert_1').hide();
+          $('#alert_2').hide();
+        }
+      }
+    });
+  }
+
+  function getRecords(page) {
+    page_size = 4;
+    $.get("/records", { page: page, page_size: page_size }, function (data) {
+      if (data && data.results) {
+
+        var tbl_body = "";
+        data.results.forEach(record => {
+          var tbl_row = "";
+          tbl_row += "<td class='sub-title'>" + (record.p_timestamp ? formateDateTime(new Date(record.p_timestamp)) : '') + "</td>";
+          tbl_row += "<td class='sub-title'>" + (record.p_identification ? record.p_identification : '') + "</td>";
+          tbl_row += "<td class='sub-title'>" + (record.p_name ? record.p_name : '') + "</td>";
+          tbl_row += "<td class='sub-title'>" + (record.p_last_name ? record.p_last_name : '') + "</td>";
+          tbl_row += "<td class='sub-title'>" + (record.t_temperature_body ? record.t_temperature_body : '') + "</td>";
+
+          alert_html = ""
+          if (record.t_alert == 0) {
+            alert_html = "<button type='button' class='btn btn-success alert_button'>Permitido</button>";
+          }
+          else if (record.t_alert == 1) {
+            alert_html = "<button type='button' class='btn btn-warning alert_button'>Advertencia</button>";
+          }
+          else if (record.t_alert == 2) {
+            alert_html = "<button type='button' class='btn btn-danger alert_button'>Peligro</button>";
+          }
+          tbl_row += "<td class='sub-title'>" + alert_html + "</td>";
+          tbl_row += "<td>" + (record.t_image_thermal ? "<img src='data:image/png;base64, " + record.t_image_thermal + "' width=200>" : '') + "</td>";
+          tbl_body += "<tr>" + tbl_row + "</tr>";
+        });
+        $("#table-register").html(tbl_body);
+
+        var pagination_body = "";
+        number_pages = Math.ceil(data.count/page_size);
+        pagination_body += '<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="getRecords('+1+');">Primera</a></li>';
+
+        var radius = 3;
+        var max_min = number_pages-2*radius;
+        var min = (page - radius) > 0 ? ((page - radius) <= max_min ? (page - radius):max_min) : 1;
+        var max = (min + 2*radius) <= number_pages ? (min + 2*radius) : number_pages;
+        for(i=min; i<=max; i++){
+          pagination_body += '<li class="page-item' + (page==i?' active' : '') + '"><a class="page-link test" href="javascript:void(0)" onclick="getRecords('+i+');">'+i+'</a></li>';
+        }
+        pagination_body += '<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="getRecords('+number_pages+');">Última</a></li>';
+
+        $("#records_pagination").html(pagination_body);
+        
+
+      }
+    });
+  }
+
+  $(document).ready(function () {
+    // $('#client').val('CelsiaYumbo');
+    // $('#label').val('Edificio Nova');
+    // $('#idCamera').val('DS001');
+
+    // $.get("/settings", function (data) {
+    //   const client = data[0].client;
+    //   const label = data[0].label;
+    //   const id = data[0].id;
+    //   $('#client').val(client);
+    //   $('#label').val(label);
+    //   $('#idCamera').val(id);
+    //   $('#camera-id').html(label);
+    //   $('#camera-ids').html(label);
+    // });
+
+    setInterval(getLatestRecord, 500);
+
+    var removeActive = function () {
+      $("nav a").parents("li, ul").removeClass("active");
+    };
+    $("#sidebar li").click(function () {
+      removeActive();
+      $(this).addClass("active");
+    });
+    removeActive();
+    $("a[href='" + location.hash + "']").parent("li").addClass("active");
+    goTo(location.hash);
+  });
+
+
+</script>
+
+</html>

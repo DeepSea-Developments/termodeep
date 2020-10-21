@@ -1,0 +1,169 @@
+.bg-dark {
+    background: #1a1a1a !important;
+}
+
+.border-title {
+    border-bottom: 1px solid #2c7391;
+    margin-left: 40px;
+    margin-right: 40px;
+}
+
+.title {
+    color: #2b7aad;
+    font-weight: bold;
+    margin-top: 25px;
+    line-height: 10px;
+}
+
+.sub-title {
+    color: #ccc;
+    font-weight: 200;
+}
+
+.section-title {
+    color: #fff;
+    font-weight: 200;
+    margin-bottom: 25px;
+}
+
+.wrapper {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+}
+
+#content {
+    width: calc(100% - 70px);
+    margin-left: 70px;
+}
+
+#sidebar {
+    /* don't forget to add all the previously mentioned styles here too */
+    width: 70;
+    background: #303030;
+    color: #fff;
+    transition: all 0.3s;
+    position: fixed;
+    height: 100%;
+}
+
+#sidebar .sidebar-header {
+    padding: 7px;
+    position: absolute;
+    bottom: 10px;
+}
+
+#sidebar ul.components {
+    padding: 20px 0;
+}
+
+#sidebar ul p {
+    color: #fff;
+    padding: 10px;
+}
+
+#sidebar ul li a {
+    padding: 10px;
+    font-size: 1.1em;
+    display: block;
+}
+
+#sidebar ul li a:hover {
+    color: #7386D5;
+    background: #6d7fcc;
+}
+
+#sidebar ul li.active>a,
+a[aria-expanded="true"] {
+    color: #fff;
+    background: #6d7fcc;
+}
+
+ul ul a {
+    font-size: 0.9em !important;
+    padding-left: 30px !important;
+    background: #6d7fcc;
+}
+
+.logo {
+    width: 50px;
+    filter: brightness(0) invert(1);
+}
+
+.video {
+    width: 400px;
+    height: 400px;
+    margin: auto;
+    color: #fff;
+}
+
+.video-img {
+    border-radius: 10px 10px 0px 0px;
+}
+
+.video-footer {
+    background: #0a1141;
+    border-radius: 0px 0px 10px 10px;
+    height: 60px;
+}
+
+.footer {
+    background: #202020;
+    position: fixed;
+    left: 70px;
+    bottom: 0;
+    width: calc(100% - 70px);
+    color: white;
+    text-align: center;
+}
+
+.termodeep {
+    margin: auto;
+    text-align: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+.focus{
+    opacity: 0.7;
+    width: 200px;   
+    filter: invert(84%) sepia(79%) saturate(6296%) hue-rotate(30deg) brightness(92%) contrast(93%);
+    
+}
+
+@media only screen and (max-width: 600px) {
+    #sidebar {
+        width: 55px;
+    }
+    #content {
+        width: calc(100% - 55px);
+        margin-left: 55px;
+    }
+    .logo {
+        width: 40px;
+    }
+    .video {
+        width: 100%;
+    }
+    .video-img {
+        width: 100%;
+    }
+    .video-footer {
+        height: 130px;
+    }
+    .footer {
+        left: 55px;
+        width: calc(100% - 55px);
+    }
+}
+
+.alert_button {
+    cursor: default !important;
+}
+
+.display_none {
+    display: none;
+}
+
+.page-item.active {
+  z-index: 0 !important;
+}

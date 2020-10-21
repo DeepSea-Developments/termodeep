@@ -1,0 +1,10 @@
+Flask==1.0.2
+opencv-contrib-python-headless==4.1.0.25
+numpy==1.16.2
+gpiozero==1.5.1
+requests==2.21.0
+pyserial==3.4
+setuptools==49.2.0
+git+https://github.com/pyinstaller/pyinstaller.git
+sentry-sdk==0.16.2
+git+https://github.com/Deepsea-Developments/py-spidev.git
