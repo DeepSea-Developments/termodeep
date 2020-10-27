@@ -1,5 +1,12 @@
 SERVERSIDE_TABLE_COLUMNS = [
     {
+        "data_name": "record_id",
+        "column_name": "id",
+        "default": "",
+        "order": 10,
+        "searchable": False
+    },
+    {
         "data_name": "p_timestamp",
         "column_name": "data1",
         "default": "",

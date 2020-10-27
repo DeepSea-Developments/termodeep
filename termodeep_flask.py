@@ -59,11 +59,6 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/erase_db')
-def erase_db():
-    return html_text
-
-
 @app.route('/download_db')
 def downloadFile():
     # For windows you need to use drive name [ex: F:/Example.pdf]
@@ -166,8 +161,9 @@ def latest_record():
     cur = get_db().cursor()
     query = """SELECT record_id, p_identification, p_timestamp, p_name, p_last_name, p_gender, p_birth_date, 
     p_blood_type, t_timestamp, t_temperature_p80, t_temperature_body, t_alert, p_alert
-    FROM records WHERE(cast(JULIANDAY('{}') - JULIANDAY(p_timestamp)  as float ) *60 * 60 * 24) < {}
-    ORDER BY record_id DESC LIMIT 1""".format(now, 15)
+    FROM records WHERE ( JULIANDAY('{}') > JULIANDAY(t_timestamp) )
+                    AND (cast(JULIANDAY('{}') - JULIANDAY(t_timestamp)  as float ) *60 * 60 * 24) < {}
+    ORDER BY record_id DESC LIMIT 1""".format(now, now, 5)
     cur.execute(query)
     data = dictfetchone(cur)
     return jsonify(data)
@@ -362,44 +358,81 @@ def get_parameters_last():
     return jsonify(data)
 
 
-# cfernandez - 08/10/2020
+global_num_records = 0
+global_records = []
+
 @app.route('/serverside_table')
 def serverside_table():
-    sql = """SELECT p_timestamp,
-                p_identification,
-                p_name,
-                p_last_name,
-                t_temperature_body,
-                t_alert,
-                t_image_rgb,
-                t_image_thermal,
-                CASE
-                    WHEN t_alert=0 THEN 'Permitido'
-                    WHEN t_alert=1 THEN 'Advertencia'
-                    WHEN t_alert=2 THEN 'Peligro'
-                    ELSE 'None'
-                END as t_alert_2
-                FROM records
-                ORDER BY record_id DESC"""
 
+    global global_num_records
+    global global_records
+
+    # Get the total number of rows in the database. If its equal to the previous one, do not repeat the data query.
+    sql = """SELECT COUNT(p_timestamp) as total_data
+            FROM records;
+            """
     cur = get_db().cursor()
     cur.execute(sql)
-    data = dictfetchall(cur)
+    total_records = dictfetchall(cur)[0]["total_data"]
 
-    for record in data:
-        image_rgb = record.get('t_image_rgb')
-        if image_rgb is not None:
-            record['t_image_rgb'] = b64encode(image_rgb).decode("utf-8")
+    if total_records != global_num_records:
+        sql = """SELECT record_id,
+                    p_timestamp,
+                    p_identification,
+                    p_name,
+                    p_last_name,
+                    t_temperature_body,
+                    t_alert,
+                    CASE
+                        WHEN t_alert=0 THEN 'Permitido'
+                        WHEN t_alert=1 THEN 'Advertencia'
+                        WHEN t_alert=2 THEN 'Peligro'
+                        ELSE 'None'
+                    END as t_alert_2
+                    FROM records
+                    ORDER BY record_id DESC"""
 
-    for record in data:
-        image_thermal = record.get('t_image_thermal')
-        if image_thermal is not None:
-            record['t_image_thermal'] = b64encode(image_thermal).decode("utf-8")
+        cur = get_db().cursor()
+        cur.execute(sql)
+        data = dictfetchall(cur)
+        global_records = data
+        global_num_records = total_records
+    else:
+        data = global_records
 
     table_builder = TableBuilder()
-    data = table_builder.collect_data_serverside(request, data)
 
-    return jsonify(data)
+    data_2_return = table_builder.collect_data_serverside(request, data)
+
+    # First get the list of ids in order to do a query of the images
+    if len(data_2_return['data']) > 0:
+        id_list = "("
+        for record in data_2_return['data']:
+            id_list = id_list + str(record['id']) + ", "
+        id_list = id_list[:-2]
+        id_list = id_list + ")"
+        print(id_list)
+
+        # Do the query of the image only if id is more than 0
+        sql = """SELECT t_image_thermal,
+                        t_image_rgb
+                        FROM records
+                        WHERE record_id IN {}""".format(id_list)
+        cur = get_db().cursor()
+        cur.execute(sql)
+        image_data = dictfetchall(cur)
+        print(len(image_data))
+
+        # Add the images into the response
+        for (record, images) in zip(data_2_return['data'], image_data):
+            image_rgb = images.get('t_image_rgb')
+            if image_rgb is not None:
+                record['data8'] = b64encode(image_rgb).decode("utf-8")
+            image_thermal = images.get('t_image_thermal')
+            if image_thermal is not None:
+                record['data7'] = b64encode(image_thermal).decode("utf-8")
+
+    return jsonify(data_2_return)
 
 
 # cfernandez - 08/10/2020
@@ -442,22 +475,36 @@ def records2():
 # cfernandez - 12/10/2020
 @app.route('/records_csv')
 def records_csv():
-    f_ingreso = str(request.args.get('f_ingreso'))
+    # f_ingreso = str(request.args.get('f_ingreso'))
 
-    sql = """SELECT p_timestamp, 
-            p_identification, 
-            p_name, 
-            p_last_name, 
-            t_temperature_body,
-            CASE
-                WHEN t_alert=0 THEN 'Permitido'
-                WHEN t_alert=1 THEN 'Advertencia'
-                WHEN t_alert=2 THEN 'Peligro'
-                ELSE 'None'
-            END as t_alert
-            FROM records 
-            WHERE t_alert={}
-            ORDER BY record_id DESC""".format(f_ingreso)
+    # sql = """SELECT t_timestamp,
+    #         p_identification,
+    #         p_name,
+    #         p_last_name,
+    #         t_temperature_body,
+    #         CASE
+    #             WHEN t_alert=0 THEN 'Permitido'
+    #             WHEN t_alert=1 THEN 'Advertencia'
+    #             WHEN t_alert=2 THEN 'Peligro'
+    #             ELSE 'None'
+    #         END as t_alert
+    #         FROM records
+    #         WHERE t_alert={}
+    #         ORDER BY record_id DESC""".format(f_ingreso)
+
+    sql = """SELECT t_timestamp, 
+                p_identification, 
+                p_name, 
+                p_last_name, 
+                t_temperature_body,
+                CASE
+                    WHEN t_alert=0 THEN 'Permitido'
+                    WHEN t_alert=1 THEN 'Advertencia'
+                    WHEN t_alert=2 THEN 'Peligro'
+                    ELSE 'None'
+                END as t_alert
+                FROM records 
+                ORDER BY record_id DESC"""
 
     cur = get_db().cursor()
     cur.execute(sql)
@@ -467,7 +514,7 @@ def records_csv():
     data.insert(0, data_cols)
 
     si = StringIO()
-    cw = csv.writer(si, delimiter=';')
+    cw = csv.writer(si, delimiter=',')
     cw.writerows(data)
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = "attachment; filename=records_termodeep.csv"
